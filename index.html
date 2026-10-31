@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#0d0d0d" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%230d0d0d'/%3E%3Crect x='9' y='9' width='46' height='46' fill='none' stroke='%23d4af37' stroke-width='2' transform='rotate(45 32 32)'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-size='34' fill='%23f3d26e' text-anchor='middle'%3EG%3C/text%3E%3C/svg%3E" />
+    <meta name="description" content="Goliat Gold Entertainment — ein begehbares 3D-Casino im Browser." />
+    <title>Goliat Gold Entertainment</title>
+  </head>
+  <body>
+    <main id="app">
+      <canvas id="world" aria-label="Begehbares 3D-Casino"></canvas>
+      <div class="cinematic-vignette" aria-hidden="true"></div>
+
+      <div class="hud" id="hud" aria-hidden="true">
+        <div class="hud-brand">
+          <span class="hud-brand-mark">G</span>
+          <span class="hud-brand-copy"><strong>GOLIAT GOLD</strong><small>ENTERTAINMENT</small></span>
+        </div>
+        <div class="hud-location">
+          <span class="hud-location-line"></span>
+          <span>MAIN LOBBY <i>·</i> GOLDEN HALL</span>
+          <span class="hud-location-line"></span>
+        </div>
+        <div class="hud-wallet">
+          <span class="hud-wallet-label">CREDITS</span>
+          <strong id="creditsValue">1.000</strong>
+        </div>
+        <div class="crosshair" aria-hidden="true"><span></span></div>
+        <div class="hud-help">
+          <span><kbd>W A S D</kbd> Laufen</span>
+          <span><kbd>SHIFT</kbd> Rennen</span>
+          <span><kbd>MAUS</kbd> Umschauen</span>
+          <span><kbd>E</kbd> Interagieren</span>
+          <span><kbd>ESC</kbd> Menü</span>
+        </div>
+        <div class="hud-escape"><kbd>ESC</kbd> PAUSE</div>
+        <div class="interaction-prompt" id="interactionPrompt" hidden>
+          <span class="prompt-key">E</span>
+          <span class="prompt-copy">
+            <small>Drücke [E]</small>
+            <strong id="interactionLabel">Goliat Gold</strong>
+          </span>
+          <span class="prompt-detail" id="interactionDetail"></span>
+        </div>
+        <div class="toast" id="toast" role="status" aria-live="polite"></div>
+      </div>
+
+      <div class="touch-controls" id="touchControls" aria-hidden="true">
+        <div class="touch-stick" id="touchStick">
+          <span class="touch-stick-ring"></span>
+          <span class="touch-stick-knob" id="touchKnob"></span>
+        </div>
+        <button class="touch-interact" id="touchInteract" type="button" aria-label="Interagieren">E</button>
+        <button class="touch-sprint" id="touchSprint" type="button" aria-label="Rennen">⇧</button>
+      </div>
+    </main>
+
+    <section id="startScreen" aria-label="Goliat Gold Entertainment Startbildschirm">
+      <div class="start-rays" aria-hidden="true"></div>
+      <div class="start-grain" aria-hidden="true"></div>
+      <div class="start-ornament start-ornament-left" aria-hidden="true"></div>
+      <div class="start-ornament start-ornament-right" aria-hidden="true"></div>
+      <div class="start-content">
+        <div class="start-crest" aria-hidden="true">
+          <span class="crest-line"></span>
+          <span class="crest-g">G</span>
+          <span class="crest-line"></span>
+        </div>
+        <p class="start-eyebrow">EST. MMXXVI · THE HOUSE ALWAYS SHINES</p>
+        <h1 class="start-logo">
+          <span class="logo-line logo-line-one">GOLIAT</span>
+          <span class="logo-line logo-line-two">GOLD</span>
+          <span class="logo-sub">ENTERTAINMENT</span>
+        </h1>
+        <p class="start-tagline">Betreten Sie den goldenen Saal. Das Spiel gehört Ihnen.</p>
+        <button id="startButton" class="start-button" type="button" aria-label="Start">
+          <span class="start-button-shine" aria-hidden="true"></span>
+          <span>OK — BETRETEN</span>
+        </button>
+        <p class="start-hint">WASD = Laufen · Maus = Umschauen · E = Interagieren · ESC = Menü</p>
+      </div>
+      <div class="start-footer">
+        <span>18+ · PLAY RESPONSIBLY</span>
+        <span class="start-footer-mark">GOLIAT GOLD ENTERTAINMENT</span>
+        <span>GOLDEN HALL · MAIN LOBBY</span>
+      </div>
+    </section>
+
+    <section id="pauseScreen" class="pause-screen" hidden aria-label="Pause">
+      <div class="pause-panel">
+        <div class="pause-ornament" aria-hidden="true">◆</div>
+        <p class="eyebrow">DER SAAL WARTET</p>
+        <h2>PAUSE</h2>
+        <p class="pause-copy">Die goldenen Türen bleiben offen.<br />Nimm dir einen Moment.</p>
+        <button id="resumeButton" class="gold-button" type="button">WEITERLAUFEN</button>
+        <p class="pause-hint">Oder drücke <kbd>ESC</kbd> erneut, um den Mauszeiger freizugeben.</p>
+      </div>
+    </section>
+
+    <section id="gameOverlay" class="game-overlay" hidden aria-hidden="true" aria-label="Casino-Spiel">
+      <div class="game-shell">
+        <header class="game-header">
+          <div class="game-header-brand"><span>G</span><strong>GOLIAT GOLD</strong></div>
+          <span class="game-title" id="gameTitle">GOLIAT GOLD</span>
+          <div class="game-header-right">
+            <span class="game-credits"><small>CREDITS</small> <strong id="gameCredits">1.000</strong></span>
+            <button id="gameClose" class="game-close" type="button"><kbd>ESC</kbd> ZURÜCK</button>
+          </div>
+        </header>
+
+        <div class="game-panel" id="slotPanel">
+          <div class="slot-side slot-paytable">
+            <p class="eyebrow">JACKPOT</p>
+            <h3>25.000</h3>
+            <div class="paytable">
+              <span><b>7 7 7</b><em>250×</em></span>
+              <span><b>★ ★ ★</b><em>100×</em></span>
+              <span><b>♦ ♦ ♦</b><em>50×</em></span>
+              <span><b>♣ ♣ ♣</b><em>20×</em></span>
+              <span><b>♥ ♥ ♥</b><em>15×</em></span>
+              <span><b>⚜ ⚜ ⚜</b><em>10×</em></span>
+            </div>
+            <p class="paytable-note">Zwei Gleiche zahlen 2× Einsatz.</p>
+          </div>
+          <div class="slot-cabinet">
+            <div class="slot-marquee">
+              <span class="marquee-star">✦</span>
+              <strong>GOLIAT GOLD</strong>
+              <span class="marquee-star">✦</span>
+            </div>
+            <div class="slot-reels" id="slotReels">
+              <div class="reel" data-symbol="7"><span class="symbol">7</span><span class="reel-gloss"></span></div>
+              <div class="reel" data-symbol="★"><span class="symbol">★</span><span class="reel-gloss"></span></div>
+              <div class="reel" data-symbol="♦"><span class="symbol">♦</span><span class="reel-gloss"></span></div>
+            </div>
+            <div class="slot-message" id="slotMessage">Wähle deinen Einsatz und dreh die Walzen.</div>
+            <div class="slot-controls">
+              <div class="bet-control">
+                <small>EINSATZ</small>
+                <div><button id="slotBetDown" type="button" aria-label="Einsatz verringern">−</button><span id="slotBet">25</span><button id="slotBetUp" type="button" aria-label="Einsatz erhöhen">+</button></div>
+              </div>
+              <button id="slotSpin" class="gold-button spin-button" type="button">DREHEN <span>↻</span></button>
+              <div class="bet-control">
+                <small>CREDITS</small>
+                <div class="credit-readout"><span id="slotCredits">1.000</span></div>
+              </div>
+            </div>
+            <p class="slot-keyhint"><kbd>LEERTASTE</kbd> DREHEN · <kbd>ESC</kbd> ZURÜCK ZUM SAAL</p>
+          </div>
+          <div class="slot-side slot-atmosphere">
+            <div class="slot-bulb-row"><i></i><i></i><i></i><i></i><i></i></div>
+            <p class="eyebrow">GOLDEN HALL</p>
+            <p>Jeder Zug ein Versprechen.<br />Jeder Gewinn ein Moment.</p>
+            <div class="slot-coin">G</div>
+            <p class="slot-fineprint">Goliat Gold Entertainment · High Limit Salon</p>
+          </div>
+        </div>
+
+        <div class="game-panel blackjack-panel" id="blackjackPanel" hidden>
+          <div class="blackjack-table">
+            <div class="table-suit table-suit-left" aria-hidden="true">♠</div>
+            <div class="table-suit table-suit-right" aria-hidden="true">♦</div>
+            <div class="dealer-zone">
+              <div class="hand-heading"><span>DEALER</span><strong id="bjDealerScore">—</strong></div>
+              <div class="card-hand" id="bjDealerCards"></div>
+            </div>
+            <div class="table-center">
+              <span class="table-mark">G</span>
+              <p>BLACKJACK PAYS 3 TO 2</p>
+              <div class="blackjack-message" id="bjMessage">Bereit für die nächste Hand?</div>
+            </div>
+            <div class="player-zone">
+              <div class="card-hand" id="bjPlayerCards"></div>
+              <div class="hand-heading"><span>DEINE HAND</span><strong id="bjPlayerScore">—</strong></div>
+            </div>
+          </div>
+          <aside class="blackjack-controls">
+            <p class="eyebrow">DEIN TISCH</p>
+            <h3>BLACKJACK</h3>
+            <p class="table-copy">Schlage den Dealer. Bleib unter 21. Ein Ass zählt 11 oder 1.</p>
+            <div class="bet-control wide">
+              <small>EINSATZ</small>
+              <div><button id="bjBetDown" type="button" aria-label="Einsatz verringern">−</button><span id="bjBet">25</span><button id="bjBetUp" type="button" aria-label="Einsatz erhöhen">+</button></div>
+            </div>
+            <div class="blackjack-actions">
+              <button id="bjDeal" class="gold-button" type="button">NEUE HAND</button>
+              <button id="bjHit" class="outline-button" type="button">KARTE</button>
+              <button id="bjStand" class="outline-button" type="button">STEHT</button>
+            </div>
+            <div class="blackjack-credits"><span>CREDITS</span><strong id="bjCredits">1.000</strong></div>
+            <p class="slot-keyhint"><kbd>H</kbd> KARTE · <kbd>S</kbd> STEHT · <kbd>ESC</kbd> ZURÜCK</p>
+          </aside>
+        </div>
+
+        <div class="game-panel roulette-panel" id="roulettePanel" hidden>
+          <div class="roulette-stage">
+            <canvas id="rouletteCanvas" width="540" height="540" aria-label="Roulette-Rad"></canvas>
+            <div class="roulette-glow" aria-hidden="true"></div>
+          </div>
+          <aside class="roulette-controls">
+            <p class="eyebrow">SINGLE ZERO</p>
+            <h3>ROULETTE</h3>
+            <p class="table-copy">Wähle eine einfache Chance. 0 gewinnt immer für das Haus.</p>
+            <div class="roulette-choices">
+              <button type="button" data-roulette-choice="red" class="selected"><i class="dot red"></i>ROT</button>
+              <button type="button" data-roulette-choice="black"><i class="dot black"></i>SCHWARZ</button>
+              <button type="button" data-roulette-choice="even">GERADE</button>
+              <button type="button" data-roulette-choice="odd">UNGERADE</button>
+            </div>
+            <div class="bet-control wide">
+              <small>EINSATZ</small>
+              <div><button id="rouletteBetDown" type="button" aria-label="Einsatz verringern">−</button><span id="rouletteBet">25</span><button id="rouletteBetUp" type="button" aria-label="Einsatz erhöhen">+</button></div>
+            </div>
+            <button id="rouletteSpin" class="gold-button" type="button">KUGEL WERFEN</button>
+            <div class="roulette-status" id="rouletteStatus">Setze auf Rot, Schwarz, Gerade oder Ungerade.</div>
+            <div class="blackjack-credits"><span>CREDITS</span><strong id="rouletteCredits">1.000</strong></div>
+            <p class="slot-keyhint"><kbd>ESC</kbd> ZURÜCK ZUM SAAL</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
