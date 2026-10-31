@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Urkraft der Meere — Pirate RPG Slice</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%E2%9A%93%3C/text%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="/src/client/style.css" />
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+
+    <!-- HUD -->
+    <div id="hud" class="hidden">
+      <div class="hud-top-left">
+        <div class="bar-row">
+          <span class="label">HP</span>
+          <div class="bar"><div id="hp-fill" class="fill hp"></div></div>
+          <span id="hp-text" class="value">100/100</span>
+        </div>
+        <div class="bar-row">
+          <span class="label">XP</span>
+          <div class="bar"><div id="xp-fill" class="fill xp"></div></div>
+          <span id="xp-text" class="value">0/100</span>
+        </div>
+        <div class="stat-line">
+          <span id="name-tag">—</span>
+          <span id="faction-tag" class="tag">—</span>
+          <span id="level-tag">Lv 1</span>
+        </div>
+      </div>
+
+      <div class="hud-top-right">
+        <div class="panel">
+          <div class="panel-title">Schiff</div>
+          <div class="kv"><span>Rumpf</span><b id="ship-hull">1</b></div>
+          <div class="kv"><span>Kanonen</span><b id="ship-cannons">1</b></div>
+          <div class="kv"><span>Crew</span><b id="ship-crew">1</b></div>
+          <div class="kv"><span>Gold</span><b id="gold">0</b></div>
+          <div class="kv"><span>Kopfgeld</span><b id="bounty">0</b></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Inventar</div>
+          <ul id="inventory" class="inv"></ul>
+        </div>
+      </div>
+
+      <div class="hud-bottom-left">
+        <div id="skill-slot" class="skill locked">
+          <span class="skill-key">Q</span>
+          <span id="skill-name">Urkraft: —</span>
+          <div class="cooldown"><div id="skill-cd" class="cooldown-fill"></div></div>
+        </div>
+        <div id="dock-hint" class="hint hidden">[E] Anlegen &amp; Schiff aufrüsten</div>
+      </div>
+
+      <div class="hud-bottom-right">
+        <div class="minimap-wrap"><canvas id="minimap" width="160" height="160"></canvas></div>
+      </div>
+
+      <div id="chatlog" class="chatlog"></div>
+      <div id="toast" class="toast"></div>
+    </div>
+
+    <!-- Start screen -->
+    <div id="menu" class="overlay">
+      <div class="menu-card">
+        <h1>Urkraft der Meere</h1>
+        <p class="sub">Open-World Pirate RPG — Vertical Slice</p>
+        <label class="field">
+          <span>Kapitänsname</span>
+          <input id="input-name" maxlength="16" placeholder="Blackbeard" autocomplete="off" />
+        </label>
+        <div class="field">
+          <span>Fraktion</span>
+          <div class="faction-pick">
+            <button class="faction-btn selected" data-faction="pirate">
+              <b>Piraten</b><small>Freiheit, Kopfgeld, Schwarzer Markt</small>
+            </button>
+            <button class="faction-btn" data-faction="marine">
+              <b>Marine</b><small>Ordnung, Sold, Tempelorden</small>
+            </button>
+          </div>
+        </div>
+        <button id="btn-play" class="primary">In See stechen</button>
+        <p class="hintline">WASD segeln · Maus zielen · Linksklick Kanone · Q Urkraft · E anlegen · Enter Chat</p>
+      </div>
+    </div>
+
+    <div id="loading" class="overlay hidden"><div class="spinner"></div><p>Verbinde mit Server…</p></div>
+
+    <script type="module" src="/src/client/main.ts"></script>
+  </body>
+</html>
