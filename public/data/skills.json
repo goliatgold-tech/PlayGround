@@ -1,0 +1,35 @@
+[
+  {
+    "id": "captain",
+    "name": "Kapitän",
+    "color": "#e8c87a",
+    "nodes": [
+      { "id": "seemannsblut", "name": "Seemannsblut", "max": 3, "desc": "+25 max. Hüllen-HP pro Stufe." },
+      { "id": "windlesen", "name": "Windlesen", "max": 3, "desc": "+4% Wendigkeit pro Stufe." },
+      { "id": "beuteblick", "name": "Beuteblick", "max": 3, "desc": "+8% Gold aus Schiffen pro Stufe." },
+      { "id": "legende", "name": "Legende", "max": 1, "desc": "Kopfgeld wächst 50% langsamer. Einmalig." }
+    ]
+  },
+  {
+    "id": "gunner",
+    "name": "Kanonier",
+    "color": "#ff9d6b",
+    "nodes": [
+      { "id": "pulverfaust", "name": "Pulverfaust", "max": 3, "desc": "+7% Kanonenschaden pro Stufe." },
+      { "id": "breitseite", "name": "Breitseite", "max": 3, "desc": "Nachladen 8% schneller pro Stufe." },
+      { "id": "brandsatz", "name": "Brandsatz", "max": 2, "desc": "Treffer haben 10% Chance zu brennen." },
+      { "id": "meisterschütze", "name": "Meisterschütze", "max": 1, "desc": "Kritische Treffer verursachen doppelten Schaden." }
+    ]
+  },
+  {
+    "id": "navigator",
+    "name": "Navigator",
+    "color": "#8fd0ff",
+    "nodes": [
+      { "id": "sternkunde", "name": "Sternkunde", "max": 3, "desc": "+3% Tempo pro Stufe." },
+      { "id": "strömung", "name": "Strömung", "max": 3, "desc": "+12% Boost-Dauer pro Stufe." },
+      { "id": "kartenleser", "name": "Kartenleser", "max": 2, "desc": "Zeigt Beute und Gegner weiter auf der Minimap." },
+      { "id": "weltumsegler", "name": "Weltumsegler", "max": 1, "desc": "Reisen zwischen Häfen ohne Zeitverlust." }
+    ]
+  }
+]

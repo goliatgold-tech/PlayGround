@@ -1,0 +1,98 @@
+[
+  {
+    "id": "q_first_wind",
+    "name": "Der erste Wind",
+    "giver": "haven",
+    "type": "visit",
+    "target": "korallenbucht",
+    "count": 1,
+    "text": "Segle nach Korallenbucht und melde dich beim Hafenmeister.",
+    "xp": 120,
+    "gold": 90,
+    "items": [{ "id": "rum", "count": 2 }]
+  },
+  {
+    "id": "q_marine_problem",
+    "name": "Ärger mit der Marine",
+    "giver": "rabenfels",
+    "type": "kill",
+    "target": "marine_patrol",
+    "count": 3,
+    "text": "Drei Marine-Patrouillen weniger auf See. Rabenfels zahlt gut.",
+    "xp": 260,
+    "gold": 240,
+    "items": [{ "id": "kanonenkugel", "count": 20 }]
+  },
+  {
+    "id": "q_wreckwood",
+    "name": "Holz aus dem Wrackgrab",
+    "giver": "haven",
+    "type": "collect",
+    "target": "treibholz",
+    "count": 12,
+    "text": "Zwölf Treibholzstücke aus dem Wrackgrab für den Schiffsbauer.",
+    "xp": 180,
+    "gold": 120,
+    "items": [{ "id": "segeltuch", "count": 6 }]
+  },
+  {
+    "id": "q_temple_light",
+    "name": "Licht im Tempel",
+    "giver": "tempelinsel",
+    "type": "collect",
+    "target": "tempelrelikt",
+    "count": 3,
+    "text": "Drei Relikte fehlen im Schrein. Das Meer hat sie. Irgendwo.",
+    "xp": 420,
+    "gold": 300,
+    "items": [{ "id": "urlaubsfrucht", "count": 1 }]
+  },
+  {
+    "id": "q_ghost_hunt",
+    "name": "Die Glocke von Geisterhafen",
+    "giver": "geisterhafen",
+    "type": "kill",
+    "target": "ghost_ship",
+    "count": 2,
+    "text": "Zwei Geisterschiffe sollen endlich ruhen. Oder wenigstens sinken.",
+    "xp": 640,
+    "gold": 520,
+    "items": [{ "id": "kartenfragment", "count": 1 }]
+  },
+  {
+    "id": "q_leviathan",
+    "name": "Das Herz der See",
+    "giver": "vulkaninsel",
+    "type": "kill",
+    "target": "sea_leviathan",
+    "count": 1,
+    "text": "Der Leviathan hat die Flotte von Karu verschlungen. Beende das.",
+    "xp": 1500,
+    "gold": 1400,
+    "items": [{ "id": "goldene_kanone", "count": 1 }]
+  },
+  {
+    "id": "q_smuggler_run",
+    "name": "Fracht ohne Fragen",
+    "giver": "schmugglernest",
+    "type": "visit",
+    "target": "eisenklippe",
+    "count": 1,
+    "text": "Bring die Kiste nach Eisenklippe. Öffne sie nicht. Wirklich nicht.",
+    "xp": 300,
+    "gold": 360,
+    "items": [{ "id": "obsidian", "count": 4 }]
+  },
+  {
+    "id": "q_pirate_king",
+    "name": "Der Piratenkönig",
+    "giver": "rabenfels",
+    "type": "kill",
+    "target": "pirate_raider",
+    "count": 6,
+    "text": "Sechs Räuber, die deinen Namen benutzen. Zeig ihnen, wem er gehört.",
+    "xp": 520,
+    "gold": 480,
+    "items": [{ "id": "kartenfragment", "count": 1 }]
+  }
+]

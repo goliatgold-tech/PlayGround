@@ -1,0 +1,32 @@
+{
+  "market": {
+    "name": "Hafenmarkt",
+    "greeting": "Frische Ware, faire Preise. Meistens.",
+    "stock": ["rum", "segeltuch", "kanonenkugel", "treibholz", "eisenbarren"]
+  },
+  "blackmarket": {
+    "name": "Schwarzer Markt",
+    "greeting": "Kein Name, keine Quittung, kein Problem.",
+    "stock": ["obsidian", "tempelrelikt", "urlaubsfrucht", "kartenfragment"]
+  },
+  "shipwright": {
+    "name": "Werft",
+    "greeting": "Rumpf hält. Segel halten. Der Rest ist Glaube.",
+    "stock": ["segeltuch", "treibholz", "eisenbarren"]
+  },
+  "tavern": {
+    "name": "Taverne",
+    "greeting": "Setz dich. Die See draußen wartet lange genug.",
+    "stock": ["rum"]
+  },
+  "shrine": {
+    "name": "Urkraft-Schrein",
+    "greeting": "Die Frucht wählt dich. Nicht umgekehrt.",
+    "stock": ["urlaubsfrucht"]
+  },
+  "quests": {
+    "name": "Auftragsbrett",
+    "greeting": "Papier, Nägel, Hoffnung. Nimm dir was.",
+    "stock": []
+  }
+}

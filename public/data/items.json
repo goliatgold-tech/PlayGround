@@ -1,0 +1,13 @@
+[
+  { "id": "treibholz", "name": "Treibholz", "rarity": "common", "type": "resource", "value": 4, "stack": 999, "icon": "🪵", "desc": "Salzgetränkt, aber brauchbar." },
+  { "id": "eisenbarren", "name": "Eisenbarren", "rarity": "common", "type": "resource", "value": 9, "stack": 999, "icon": "⛓️", "desc": "Schwer, ehrlich, laut." },
+  { "id": "segeltuch", "name": "Segeltuch", "rarity": "common", "type": "resource", "value": 7, "stack": 999, "icon": "🧵", "desc": "Flickwerk für Sturm und Eitelkeit." },
+  { "id": "kanonenkugel", "name": "Kanonenkugel", "rarity": "common", "type": "resource", "value": 5, "stack": 999, "icon": "⚫", "desc": "Das Argument, das immer zieht." },
+  { "id": "rum", "name": "Rum", "rarity": "uncommon", "type": "consumable", "value": 14, "stack": 99, "icon": "🍾", "desc": "Heilt 25 HP. Moralisch verpflichtend." },
+  { "id": "koralle", "name": "Koralle", "rarity": "uncommon", "type": "resource", "value": 18, "stack": 999, "icon": "🪸", "desc": "Leuchtet im Dunkeln schwach." },
+  { "id": "obsidian", "name": "Obsidian", "rarity": "rare", "type": "resource", "value": 42, "stack": 999, "icon": "🖤", "desc": "Erkalte Wut eines Vulkans." },
+  { "id": "tempelrelikt", "name": "Tempelrelikt", "rarity": "rare", "type": "treasure", "value": 120, "stack": 99, "icon": "🏮", "desc": "Ein Fragment der Urkraft." },
+  { "id": "urlaubsfrucht", "name": "Urlaubsfrucht", "rarity": "epic", "type": "fruit", "value": 480, "stack": 9, "icon": "🍍", "desc": "Schmeckt nach Macht und Reue." },
+  { "id": "kartenfragment", "name": "Kartenfragment", "rarity": "epic", "type": "treasure", "value": 260, "stack": 99, "icon": "🗺️", "desc": "Ein Stück der Route nach Nirgendwo." },
+  { "id": "goldene_kanone", "name": "Goldene Kanone", "rarity": "legendary", "type": "shipupgrade", "value": 1800, "stack": 1, "icon": "🏆", "desc": "Schießt nicht besser. Sieht dabei großartig aus." }
+]

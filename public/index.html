@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#06171d" />
+  <meta name="description" content="Kaperfahrt - Open World Pirate RPG im Browser. Segle, kämpfe, kapere und baue deine Legende." />
+  <title>Kaperfahrt · Open World Pirate RPG</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9A%93%3C/text%3E%3C/svg%3E" />
+  <script type="importmap">
+    { "imports": { "three": "/vendor/three.module.js" } }
+  </script>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+  <div id="vignette"></div>
+
+  <div id="loading">
+    <div class="loading-mark">⚓</div>
+    <div class="loading-title">KAPERFAHRT</div>
+    <div class="loading-bar"><i id="loading-fill"></i></div>
+    <div id="loading-text">Die See wird geladen …</div>
+  </div>
+
+  <!-- ============================== HUD ============================== -->
+  <div id="hud" class="hidden">
+    <div id="hud-top-left" class="glass">
+      <div class="crest" id="hud-crest">☠</div>
+      <div class="id-block">
+        <div class="id-row">
+          <span id="hud-name">Kapitän</span>
+          <span id="hud-level" class="level-pill">Lv 1</span>
+        </div>
+        <div class="id-sub"><span id="hud-faction">Piraten</span><span class="dot">·</span><span id="hud-title">Neuling der See</span></div>
+        <div class="bar hp"><i id="hud-hp-fill"></i><b id="hud-hp-text">100 / 100</b></div>
+        <div class="bar xp"><i id="hud-xp-fill"></i><b id="hud-xp-text">0 / 120 XP</b></div>
+      </div>
+    </div>
+
+    <div id="hud-top-right">
+      <div class="minimap-wrap glass">
+        <canvas id="minimap" width="440" height="440"></canvas>
+        <span class="minimap-n">N</span>
+      </div>
+      <div id="online-badge" class="glass">⚓ <span id="online-count">1</span> online</div>
+    </div>
+
+    <div id="hud-left">
+      <div id="hud-resources" class="glass">
+        <span title="Gold">🪙 <b id="hud-gold">0</b></span>
+        <span title="Kopfgeld">☠ <b id="hud-bounty">0</b></span>
+      </div>
+      <div id="hud-quest" class="glass">
+        <div class="q-head">Auftrag</div>
+        <div id="quest-name">Kein Auftrag</div>
+        <div id="quest-text" class="q-text">Sprich am Auftragsbrett in einem Hafen vor.</div>
+        <div id="quest-progress" class="q-progress hidden"><i></i><b>0 / 1</b></div>
+      </div>
+      <div id="chat" class="glass">
+        <div id="chat-log"></div>
+        <form id="chat-form">
+          <input id="chat-input" maxlength="140" autocomplete="off" placeholder="Enter · mit der Crew sprechen" />
+        </form>
+      </div>
+    </div>
+
+    <div id="hud-bottom">
+      <div id="abilities"></div>
+      <div id="hud-compass" class="glass">
+        <div class="compass-ring"><span id="compass-needle">▲</span></div>
+        <div class="compass-info">
+          <b id="hud-speed">0 kn</b>
+          <span id="hud-heading">N 000°</span>
+        </div>
+        <div class="throttle"><i id="hud-throttle"></i></div>
+      </div>
+    </div>
+
+    <div id="nameplates"></div>
+    <div id="toasts"></div>
+
+    <div id="dock-prompt" class="hidden">
+      <button id="dock-btn"><kbd>F</kbd> <span id="dock-label">Anlegen</span></button>
+    </div>
+
+    <div id="hint-bar" class="glass">
+      <span><kbd>W</kbd><kbd>S</kbd> Segel</span>
+      <span><kbd>A</kbd><kbd>D</kbd> Ruder</span>
+      <span><kbd>Leertaste</kbd> Feuer</span>
+      <span><kbd>F</kbd> Anlegen</span>
+      <span><kbd>1</kbd>–<kbd>3</kbd> Fähigkeiten</span>
+      <span><kbd>M</kbd> Karte</span>
+      <span><kbd>Tab</kbd> Inventar</span>
+    </div>
+
+    <div id="mobile-controls">
+      <div id="joystick"><div id="joystick-knob"></div></div>
+      <div id="touch-actions">
+        <div class="touch-row">
+          <button class="tbtn ability-touch" data-slot="0">1</button>
+          <button class="tbtn ability-touch" data-slot="1">2</button>
+          <button class="tbtn ability-touch" data-slot="2">3</button>
+        </div>
+        <div class="touch-row">
+          <button class="tbtn small" id="touch-map">🗺️</button>
+          <button class="tbtn small" id="touch-interact">⚓</button>
+          <button class="tbtn fire" id="touch-fire">💥</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="top-actions">
+      <button class="icon-btn" id="btn-map" title="Karte (M)">🗺️</button>
+      <button class="icon-btn" id="btn-inventory" title="Inventar (Tab)">🎒</button>
+      <button class="icon-btn" id="btn-skills" title="Fähigkeiten (K)">✦</button>
+      <button class="icon-btn" id="btn-menu" title="Menü (Esc)">☰</button>
+    </div>
+  </div>
+
+  <!-- ============================ START SCREEN ============================ -->
+  <div id="start-screen">
+    <div class="start-shade"></div>
+    <div class="start-wrap">
+      <div class="brand">
+        <div class="brand-kicker">Open World · Multiplayer · Urkraft</div>
+        <h1>KAPER<span>FAHRT</span></h1>
+        <p class="tagline">Fünf Fraktionen. Zwölf Inseln. Eine See, die alles behält.</p>
+        <div class="feature-row">
+          <span>⚔️ Schiffskampf</span><span>🌪️ Urkraft-Früchte</span><span>🏝️ 12 Inseln</span><span>👥 Online-Crews</span>
+        </div>
+      </div>
+
+      <div class="editor glass-strong">
+        <div class="editor-head">
+          <h2>Deine Legende</h2>
+          <span class="editor-sub">Charakter & Crew</span>
+        </div>
+
+        <label class="field">
+          <span>Kapitänsname</span>
+          <input id="edit-name" maxlength="16" placeholder="z. B. Rota Nordwind" />
+        </label>
+
+        <div class="editor-block">
+          <div class="block-head"><h3>Fraktion</h3><span>bestimmt Startbonus & Häfen</span></div>
+          <div id="faction-picker" class="card-row"></div>
+        </div>
+
+        <div class="editor-block">
+          <div class="block-head"><h3>Urkraft-Frucht</h3><span>eine Wahl für diese Reise</span></div>
+          <div id="fruit-picker" class="card-row"></div>
+        </div>
+
+        <div class="editor-block">
+          <div class="block-head"><h3>Schiff</h3><span>Startkapital: 250 Gold</span></div>
+          <div id="ship-picker" class="card-row"></div>
+        </div>
+
+        <button id="start-btn" class="primary">⚓ In See stechen</button>
+        <div class="start-links">
+          <button id="continue-btn" class="ghost hidden">Letzten Spielstand laden</button>
+          <button id="account-btn" class="ghost">Konto / Cloud-Save</button>
+        </div>
+        <div class="fineprint">Läuft im Browser · Tastatur, Maus & Touch · Fortschritt lokal gespeichert</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================== PANELS ============================== -->
+  <div id="panel-layer" class="hidden">
+    <div class="panel" id="panel">
+      <header class="panel-head">
+        <div>
+          <div class="panel-kicker" id="panel-kicker">Hafen</div>
+          <h2 id="panel-title">Titel</h2>
+        </div>
+        <button id="panel-close" class="icon-btn" aria-label="Schließen">✕</button>
+      </header>
+      <div id="panel-body" class="panel-body"></div>
+    </div>
+  </div>
+
+  <div id="rotate-hint">
+    <div>📱↔️</div>
+    <p>Für die volle See: Gerät quer halten.</p>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

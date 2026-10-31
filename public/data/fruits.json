@@ -1,0 +1,41 @@
+[
+  {
+    "id": "kaze",
+    "name": "Kaze Kaze no Mi",
+    "element": "Wind",
+    "color": "#7fe7d4",
+    "desc": "Der Wind gehorcht dem, der ihn nicht festhält.",
+    "passive": "Ruder reagieren 15% schneller.",
+    "abilities": [
+      { "id": "windschnitt", "name": "Windschnitt", "cooldown": 4, "cost": 10, "damage": 26, "range": 220, "desc": "Eine scharfe Böe durchschneidet den Bug." },
+      { "id": "sturmfaust", "name": "Sturmfaust", "cooldown": 9, "cost": 22, "damage": 60, "range": 130, "desc": "Ein Wirbel zerschlägt alles im Umkreis." },
+      { "id": "aufwind", "name": "Aufwind", "cooldown": 14, "cost": 18, "damage": 0, "range": 0, "desc": "Segel voller Wind: +45% Tempo für 6s." }
+    ]
+  },
+  {
+    "id": "magma",
+    "name": "Magma Magma no Mi",
+    "element": "Feuer",
+    "color": "#ff8a3d",
+    "desc": "Was der Vulkan vergisst, vergisst es nicht.",
+    "passive": "Kanonen verursachen 10% mehr Schaden.",
+    "abilities": [
+      { "id": "lavakugel", "name": "Lavakugel", "cooldown": 5, "cost": 12, "damage": 34, "range": 240, "desc": "Eine glühende Kugel schmilzt Planken." },
+      { "id": "vulkanausbruch", "name": "Vulkanausbruch", "cooldown": 12, "cost": 26, "damage": 75, "range": 150, "desc": "Das Meer kocht ringsum." },
+      { "id": "glutpanzer", "name": "Glutpanzer", "cooldown": 16, "cost": 20, "damage": 0, "range": 0, "desc": "Ein Schild aus Hitze: 40% weniger Schaden für 8s." }
+    ]
+  },
+  {
+    "id": "yami",
+    "name": "Yami Yami no Mi",
+    "element": "Mystik",
+    "color": "#b48cff",
+    "desc": "Zwischen den Wellen liegt eine zweite See.",
+    "passive": "Beute und Relikte sind 15% wertvoller.",
+    "abilities": [
+      { "id": "schattenritt", "name": "Schattenritt", "cooldown": 7, "cost": 14, "damage": 18, "range": 160, "desc": "Springt durch den Schatten zum Zielpunkt." },
+      { "id": "seelenfeuer", "name": "Seelenfeuer", "cooldown": 10, "cost": 24, "damage": 66, "range": 180, "desc": "Violette Flammen brennen auf dem Wasser." },
+      { "id": "nebelhort", "name": "Nebelhort", "cooldown": 15, "cost": 20, "damage": 0, "range": 0, "desc": "Nebel heilt 35 HP und verbirgt dich 6s." }
+    ]
+  }
+]

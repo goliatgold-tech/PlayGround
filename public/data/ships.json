@@ -1,0 +1,51 @@
+{
+  "playerShips": [
+    {
+      "id": "sloop",
+      "name": "Küstenschoner",
+      "class": "Sloop",
+      "hp": 260,
+      "speed": 26,
+      "turn": 1.35,
+      "cannons": 4,
+      "damage": 9,
+      "crew": 6,
+      "price": 0,
+      "desc": "Wendig, bescheiden, überlebt länger als die Großen."
+    },
+    {
+      "id": "brig",
+      "name": "Freibeuter-Brigg",
+      "class": "Brigg",
+      "hp": 420,
+      "speed": 30,
+      "turn": 1.1,
+      "cannons": 8,
+      "damage": 12,
+      "crew": 14,
+      "price": 2400,
+      "desc": "Der Allrounder der Meere. Zwei Masten, keine Ausreden."
+    },
+    {
+      "id": "galleon",
+      "name": "Kriegsgaleone",
+      "class": "Galeone",
+      "hp": 760,
+      "speed": 24,
+      "turn": 0.75,
+      "cannons": 14,
+      "damage": 18,
+      "crew": 30,
+      "price": 7200,
+      "desc": "Ein schwimmendes Fort. Langsam, aber das Meer weiß es."
+    }
+  ],
+  "enemies": [
+    { "id": "marine_patrol", "name": "Marine-Patrouille", "faction": "marine", "hp": 180, "speed": 22, "turn": 1.1, "damage": 8, "range": 130, "xp": 40, "gold": 55, "aggro": 330, "ship": "sloop" },
+    { "id": "marine_frigate", "name": "Marine-Fregatte", "faction": "marine", "hp": 380, "speed": 20, "turn": 0.9, "damage": 14, "range": 150, "xp": 95, "gold": 130, "aggro": 380, "ship": "brig" },
+    { "id": "pirate_raider", "name": "Piratenräuber", "faction": "pirate", "hp": 210, "speed": 25, "turn": 1.2, "damage": 10, "range": 120, "xp": 55, "gold": 80, "aggro": 300, "ship": "sloop" },
+    { "id": "smuggler", "name": "Schmuggler", "faction": "blackmarket", "hp": 160, "speed": 27, "turn": 1.3, "damage": 6, "range": 110, "xp": 35, "gold": 100, "aggro": 260, "ship": "sloop" },
+    { "id": "ghost_ship", "name": "Geisterschiff", "faction": "pirate", "hp": 520, "speed": 21, "turn": 0.8, "damage": 17, "range": 160, "xp": 180, "gold": 260, "aggro": 420, "ship": "brig" },
+    { "id": "sea_leviathan", "name": "Seelenleviathan", "faction": "pirate", "hp": 1400, "speed": 18, "turn": 0.6, "damage": 26, "range": 190, "xp": 520, "gold": 900, "aggro": 520, "ship": "galleon", "boss": true }
+  ]
+}
