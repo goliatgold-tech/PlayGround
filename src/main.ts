@@ -33,12 +33,21 @@ if (!canvas || !startScreen || !startButton || !pauseScreen || !resumeButton) {
 const isTouch = window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0
 const PLAYER_HEIGHT = 1.7
 const PLAYER_RADIUS = 0.36
+const MAX_PIXEL_RATIO = isTouch ? 1.15 : 1.35
+const MIN_RENDER_SCALE = 0.62
+let renderScale = 1
+
+function currentPixelRatio() {
+  return Math.max(MIN_RENDER_SCALE, Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO) * renderScale)
+}
 
 let renderer: THREE.WebGLRenderer
 try {
   renderer = new THREE.WebGLRenderer({
     canvas,
-    antialias: true,
+    // The composer uses its own MSAA render target, so the default framebuffer
+    // does not need another multisampled allocation.
+    antialias: false,
     powerPreference: 'high-performance',
     alpha: false,
   })
@@ -47,13 +56,17 @@ try {
   throw error
 }
 
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.65))
+renderer.setPixelRatio(currentPixelRatio())
 renderer.setSize(window.innerWidth, window.innerHeight)
 renderer.outputColorSpace = THREE.SRGBColorSpace
 renderer.toneMapping = THREE.ACESFilmicToneMapping
-renderer.toneMappingExposure = 0.88
+renderer.toneMappingExposure = 1.0
 renderer.shadowMap.enabled = true
 renderer.shadowMap.type = THREE.PCFSoftShadowMap
+// All shadow-casting architecture is static. Rendering the shadow map once
+// removes an entire shadow pass from every following frame.
+renderer.shadowMap.autoUpdate = false
+renderer.shadowMap.needsUpdate = true
 setTextureAnisotropy(Math.min(8, renderer.capabilities.getMaxAnisotropy()))
 
 const world = createCasinoWorld()
@@ -78,18 +91,19 @@ controls.pointerSpeed = 0.86
 const renderTarget = new THREE.WebGLRenderTarget(
   Math.max(1, Math.floor(window.innerWidth * renderer.getPixelRatio())),
   Math.max(1, Math.floor(window.innerHeight * renderer.getPixelRatio())),
-  { type: THREE.HalfFloatType, samples: 4 },
+  { type: THREE.HalfFloatType, samples: 2 },
 )
 const composer = new EffectComposer(renderer, renderTarget)
 composer.addPass(new RenderPass(scene, camera))
 const bloom = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
-  0.34,
-  0.5,
-  0.94,
+  0.4,
+  0.55,
+  0.86,
 )
 composer.addPass(bloom)
 composer.addPass(new OutputPass())
+resize()
 
 const gameUI = new GameUI({
   onCredits: credits => {
@@ -113,6 +127,10 @@ let lastTime = 0
 let bobPhase = 0
 let loopRunning = false
 let pointerLocked = false
+let qualityTime = 0
+let qualityFrames = 0
+let qualityGoodWindows = 0
+let qualityWarmup = 0
 
 const keys = new Set<string>()
 const velocity = new THREE.Vector3()
@@ -380,17 +398,61 @@ function interact() {
   if (!isTouch) controls.unlock()
 }
 
+function updateQuality(rawDelta: number) {
+  // Shader compilation and the first shadow-map render make the opening
+  // seconds unreliable; do not downscale because of that one-off cost.
+  if (qualityWarmup < 2.5) {
+    qualityWarmup += rawDelta
+    return
+  }
+  qualityTime += rawDelta
+  qualityFrames++
+  if (qualityTime < 1.4) return
+  const fps = qualityFrames / qualityTime
+  qualityTime = 0
+  qualityFrames = 0
+
+  if (fps < 44 && renderScale > MIN_RENDER_SCALE + 0.005) {
+    renderScale = Math.max(MIN_RENDER_SCALE, renderScale * 0.82)
+    qualityGoodWindows = 0
+    resize()
+    return
+  }
+
+  if (fps > 56) {
+    qualityGoodWindows++
+    if (qualityGoodWindows >= 4 && renderScale < 0.995) {
+      renderScale = Math.min(1, renderScale * 1.06)
+      qualityGoodWindows = 0
+      resize()
+    }
+  } else {
+    qualityGoodWindows = 0
+  }
+}
+
 function animate(now: number) {
   if (!loopRunning) return
   requestAnimationFrame(animate)
-  const delta = Math.min(0.05, Math.max(0.0001, (now - lastTime) / 1000))
+  const rawDelta = Math.max(0.0001, (now - lastTime) / 1000)
+  const delta = Math.min(0.05, rawDelta)
   lastTime = now
   const elapsed = clock.getElapsedTime()
+
+  // While a modal or the pause screen is open the 3D scene is covered by a
+  // blurred overlay. Keeping the last frame avoids burning GPU time on a scene
+  // nobody can see and makes the game UI itself run smoothly.
+  if (gameUI.isOpen || pauseVisible) {
+    velocity.multiplyScalar(Math.exp(-8 * delta))
+    hidePrompt()
+    return
+  }
 
   updateMovement(delta)
   if (started) world.update(elapsed, delta, camera.position)
   updateInteraction()
   composer.render(delta)
+  if (started) updateQuality(rawDelta)
 }
 
 // Touch look and movement.
@@ -499,10 +561,14 @@ function resize() {
   const height = window.innerHeight
   camera.aspect = width / height
   camera.updateProjectionMatrix()
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.65))
+  renderer.setPixelRatio(currentPixelRatio())
   renderer.setSize(width, height)
   composer.setSize(width, height)
-  bloom.setSize(width, height)
+  // Bloom is a soft glow; half-resolution mips are visually indistinguishable
+  // and save a large amount of fill rate on high-DPI screens.
+  const bloomWidth = Math.max(1, Math.floor(width * renderer.getPixelRatio() * 0.5))
+  const bloomHeight = Math.max(1, Math.floor(height * renderer.getPixelRatio() * 0.5))
+  bloom.setSize(bloomWidth, bloomHeight)
 }
 
 window.addEventListener('resize', resize)
@@ -520,6 +586,9 @@ composer.render(0.016)
   controls,
   world,
   gameUI,
+  renderer,
+  composer,
+  bloom,
   setPosition: (x: number, z: number) => {
     camera.position.set(x, PLAYER_HEIGHT, z)
     velocity.set(0, 0, 0)
@@ -530,6 +599,12 @@ composer.render(0.016)
   },
   get started() {
     return started
+  },
+  get renderScale() {
+    return renderScale
+  },
+  get pixelRatio() {
+    return renderer.getPixelRatio()
   },
 }
 

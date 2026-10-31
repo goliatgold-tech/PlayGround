@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import {
   carpetTexture,
   emblemTexture,
@@ -121,6 +122,68 @@ function addPointLight(
   light.position.set(x, y, z)
   parent.add(light)
   return light
+}
+
+function markDynamic(object: THREE.Object3D) {
+  object.traverse(child => {
+    child.userData.dynamic = true
+  })
+}
+
+/**
+ * Combines meshes that share a material into a single draw call. Animated
+ * objects are marked dynamic and skipped, so doors, wheels and fountain parts
+ * keep their independent transforms. Transparent additive glows are skipped
+ * as well to preserve their blending order.
+ */
+function batchMeshes(parent: THREE.Object3D, onlyChildren = false) {
+  parent.updateWorldMatrix(true, true)
+  const parentInverse = new THREE.Matrix4().copy(parent.matrixWorld).invert()
+  const buckets = new Map<THREE.Material, THREE.Mesh[]>()
+
+  const visit = (object: THREE.Object3D) => {
+    if (!object.visible || object.userData.dynamic || object.userData.noBatch) return
+    if (object.isMesh) {
+      const mesh = object as THREE.Mesh
+      const material = mesh.material
+      // Never merge transparent geometry: blending order and depth sorting must
+      // remain per-object for the light shafts, water and glasses.
+      if (Array.isArray(material) || material.transparent) return
+      const transmission = (material as THREE.MeshPhysicalMaterial).transmission ?? 0
+      if (material.alphaTest > 0 || transmission > 0) return
+      if (!mesh.geometry.attributes.position) return
+      const list = buckets.get(material) ?? []
+      list.push(mesh)
+      buckets.set(material, list)
+      return
+    }
+    if (!onlyChildren) object.children.forEach(visit)
+  }
+
+  if (onlyChildren) parent.children.forEach(visit)
+  else visit(parent)
+
+  for (const [material, meshes] of buckets) {
+    if (meshes.length < 2) continue
+    const geometries: THREE.BufferGeometry[] = []
+    for (const mesh of meshes) {
+      const geometry = mesh.geometry.index ? mesh.geometry.toNonIndexed() : mesh.geometry.clone()
+      const relative = new THREE.Matrix4().multiplyMatrices(parentInverse, mesh.matrixWorld)
+      geometry.applyMatrix4(relative)
+      geometries.push(geometry)
+    }
+    const mergedGeometry = mergeGeometries(geometries, false)
+    geometries.forEach(geometry => geometry.dispose())
+    if (!mergedGeometry) continue
+
+    const merged = new THREE.Mesh(mergedGeometry, material)
+    merged.castShadow = meshes.some(mesh => mesh.castShadow)
+    merged.receiveShadow = meshes.some(mesh => mesh.receiveShadow)
+    merged.renderOrder = Math.max(...meshes.map(mesh => mesh.renderOrder))
+    merged.userData.dynamic = meshes.some(mesh => mesh.userData.dynamic)
+    parent.add(merged)
+    meshes.forEach(mesh => mesh.removeFromParent())
+  }
 }
 
 function makeSign(
@@ -265,8 +328,11 @@ export function createCasinoWorld(): CasinoWorld {
     roughness: 0.88,
     metalness: 0.14,
   })
+  // Emissive bulbs are pushed above 1.0 in linear space so bloom still finds
+  // them even without a dedicated light per bulb. This keeps the chandelier
+  // glow while avoiding dozens of real-time point lights.
   const warmLight = new THREE.MeshBasicMaterial({
-    color: 0xffd98a,
+    color: new THREE.Color().setRGB(2.4, 1.9, 1.0),
     toneMapped: false,
   })
   const water = new THREE.MeshPhysicalMaterial({
@@ -464,9 +530,6 @@ export function createCasinoWorld(): CasinoWorld {
       diamond.rotation.z = Math.PI / 4
       diamond.castShadow = false
       scene.add(diamond)
-      const wash = new THREE.PointLight(0xffb85b, 4.5, 3.8, 2)
-      wash.position.set(side * 15.9, 3.1, z)
-      scene.add(wash)
     }
   }
   for (const side of [-1, 1]) {
@@ -634,18 +697,23 @@ export function createCasinoWorld(): CasinoWorld {
     0,
     -Math.PI / 2,
   )
-  for (const y of [1.95, 2.72, 3.48]) {
-    box(bar, 0.58, 0.07, 7.8, gold, 0.83, y, 0)
-    for (let z = -3.5; z <= 3.5; z += 0.52) {
-      const hue = [0x7d3b12, 0x25512d, 0x6b0d17, 0x7a5516][Math.floor(Math.random() * 4)]
-      const bottleMaterial = new THREE.MeshStandardMaterial({
-        color: hue,
+  // A small shared palette lets the batcher combine the whole bottle shelf
+  // into four draw calls instead of creating dozens of one-off materials.
+  const bottleMaterials = [0x7d3b12, 0x25512d, 0x6b0d17, 0x7a5516].map(
+    color =>
+      new THREE.MeshStandardMaterial({
+        color,
         roughness: 0.16,
         metalness: 0.25,
         transparent: true,
         opacity: 0.86,
         envMapIntensity: 1.7,
-      })
+      }),
+  )
+  for (const y of [1.95, 2.72, 3.48]) {
+    box(bar, 0.58, 0.07, 7.8, gold, 0.83, y, 0)
+    for (let z = -3.5; z <= 3.5; z += 0.52) {
+      const bottleMaterial = bottleMaterials[Math.floor(Math.random() * bottleMaterials.length)]
       const bottle = cylinder(bar, 0.085, 0.11, 0.42 + Math.random() * 0.16, 12, bottleMaterial, 0.83, y + 0.26, z, false)
       const neck = cylinder(bar, 0.035, 0.05, 0.16, 10, bottleMaterial, 0.83, y + 0.52, z, false)
       bottle.rotation.z = 0.02
@@ -666,18 +734,18 @@ export function createCasinoWorld(): CasinoWorld {
     stool.add(foot)
     cylinder(stool, 0.29, 0.29, 0.06, 24, agedGold, 0, 0.03, 0)
   }
-  // Glasses.
+  // Glasses use a cheap translucent material; transmission would force an
+  // additional full-scene render pass for five tiny props.
+  const glassMaterial = new THREE.MeshStandardMaterial({
+    color: 0xcde8dd,
+    metalness: 0,
+    roughness: 0.06,
+    transparent: true,
+    opacity: 0.38,
+    depthWrite: false,
+    envMapIntensity: 1.8,
+  })
   for (let i = 0; i < 5; i++) {
-    const glassMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0xcde8dd,
-      metalness: 0,
-      roughness: 0.03,
-      transmission: 0.92,
-      transparent: true,
-      opacity: 0.62,
-      thickness: 0.15,
-      envMapIntensity: 2,
-    })
     cylinder(bar, 0.1, 0.075, 0.25, 16, glassMaterial, -0.16, 1.46, -2.8 + i * 1.35, false)
   }
   for (let i = 0; i < 3; i++) {
@@ -689,7 +757,6 @@ export function createCasinoWorld(): CasinoWorld {
     const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.12, 18, 12), warmLight)
     bulb.position.y = -0.16
     pendant.add(bulb)
-    addPointLight(pendant, 0xffbd63, 8, 6, 0, -0.16, 0)
   }
   addPointLight(scene, 0xffb04e, 28, 16, 14.2, 4.2, 4.3)
   colliders.push({ shape: 'box', minX: 13.75, maxX: 16.1, minZ: 0.1, maxZ: 8.55, enabled: true })
@@ -742,7 +809,6 @@ export function createCasinoWorld(): CasinoWorld {
     cylinder(scene, 0.36, 0.4, 0.15, 24, velvet, -13.2, 0.75, z)
     cylinder(scene, 0.05, 0.07, 0.68, 12, darkMetal, -13.2, 0.37, z)
     cylinder(scene, 0.3, 0.3, 0.05, 24, agedGold, -13.2, 0.03, z)
-    addPointLight(machine, index === 0 ? 0xff4b3c : 0xffc45c, 6, 4.5, 0, 2.4, 0.9)
     colliders.push({ shape: 'box', minX: -16.15, maxX: -14.2, minZ: z - 1.1, maxZ: z + 1.1, enabled: true })
     interactables.push({
       id: `slot-${index + 1}`,
@@ -753,6 +819,7 @@ export function createCasinoWorld(): CasinoWorld {
       radius: 2.25,
     })
   }
+  addPointLight(scene, 0xffb45c, 16, 9, -14.2, 3.1, 1.6)
 
   // ── Blackjack table ─────────────────────────────────────────────────────
   const blackjack = new THREE.Group()
@@ -834,6 +901,7 @@ export function createCasinoWorld(): CasinoWorld {
   wheel.add(wheelRing)
   const ball = new THREE.Mesh(new THREE.SphereGeometry(0.06, 14, 10), paleGold)
   ball.position.set(0.78, 0.12, 0)
+  ball.userData.noBatch = true
   wheel.add(ball)
   for (let i = 0; i < 4; i++) {
     const angle = (i / 4) * Math.PI * 2 + Math.PI / 4
@@ -909,15 +977,15 @@ export function createCasinoWorld(): CasinoWorld {
   rearEmblem.visible = false
 
   // ── Lighting ────────────────────────────────────────────────────────────
-  scene.add(new THREE.AmbientLight(0x6b4d22, 0.54))
-  const hemi = new THREE.HemisphereLight(0xffdfa0, 0x1b0c02, 0.82)
+  scene.add(new THREE.AmbientLight(0x6b4d22, 0.82))
+  const hemi = new THREE.HemisphereLight(0xffdfa0, 0x1b0c02, 1.2)
   scene.add(hemi)
 
   const key = new THREE.SpotLight(0xffd27a, 245, 32, 0.62, 0.72, 1.35)
   key.position.set(0, 8.7, 4.5)
   key.target.position.set(0, 0, 1)
   key.castShadow = true
-  key.shadow.mapSize.set(2048, 2048)
+  key.shadow.mapSize.set(1024, 1024)
   key.shadow.bias = -0.0002
   key.shadow.normalBias = 0.035
   scene.add(key, key.target)
@@ -925,9 +993,7 @@ export function createCasinoWorld(): CasinoWorld {
   const fountainSpot = new THREE.SpotLight(0x7be7ee, 220, 24, 0.56, 0.82, 1.4)
   fountainSpot.position.set(0, 8.6, -2)
   fountainSpot.target.position.set(0, 1.4, -2)
-  fountainSpot.castShadow = true
-  fountainSpot.shadow.mapSize.set(1024, 1024)
-  fountainSpot.shadow.bias = -0.0003
+  fountainSpot.castShadow = false
   scene.add(fountainSpot, fountainSpot.target)
 
   const doorSpot = new THREE.SpotLight(0xffbf58, 210, 25, 0.5, 0.7, 1.3)
@@ -946,7 +1012,6 @@ export function createCasinoWorld(): CasinoWorld {
       const glow = new THREE.Mesh(new THREE.SphereGeometry(0.14, 16, 12), warmLight)
       glow.position.set(0, 0.1, 0.2)
       bracket.add(glow)
-      if (z === -5.5 || z === 5.5) addPointLight(scene, 0xffb45c, 9, 5.5, side * 16.1, 4.9, z)
     }
   }
 
@@ -981,8 +1046,10 @@ export function createCasinoWorld(): CasinoWorld {
         chandelier.add(bulb)
       }
     }
-    addPointLight(chandelier, 0xffc26b, 42, 16, 0, 0.2, 0)
   }
+  // One shared chandelier light is enough; the individual bulbs are emissive
+  // geometry and no longer each carry a real-time point light.
+  addPointLight(scene, 0xffc26b, 48, 19, 0, 6.8, 5.4)
 
   // Volumetric-ish light shafts.
   for (const [x, z, radius, opacity] of [
@@ -1116,6 +1183,27 @@ export function createCasinoWorld(): CasinoWorld {
     }
     moteAttribute.needsUpdate = true
   }
+
+  // ── Draw-call reduction ─────────────────────────────────────────────────
+  // Batch each moving group in its own local space first, then merge every
+  // remaining static mesh by material. This keeps the exact same geometry and
+  // materials while cutting the frame from hundreds of draws to a few dozen.
+  chandeliers.forEach(chandelier => batchMeshes(chandelier, true))
+  batchMeshes(leftDoor, true)
+  batchMeshes(rightDoor, true)
+  batchMeshes(wheel, true)
+
+  markDynamic(leftDoor)
+  markDynamic(rightDoor)
+  markDynamic(wheel)
+  markDynamic(sculpture)
+  markDynamic(crown)
+  markDynamic(waterBasin)
+  markDynamic(upperWater)
+  ripples.forEach(markDynamic)
+  chandeliers.forEach(markDynamic)
+
+  batchMeshes(scene)
 
   return { scene, interactables, colliders, update }
 }

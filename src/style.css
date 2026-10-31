@@ -829,6 +829,12 @@ kbd {
   opacity: 1;
 }
 
+/* During the fade-out the overlay is still in the DOM; it must never swallow
+   clicks meant for the lobby. */
+.game-overlay:not(.is-open) {
+  pointer-events: none;
+}
+
 .game-shell {
   display: flex;
   flex-direction: column;
@@ -1312,6 +1318,7 @@ kbd {
   min-height: 112px;
   margin-top: 7px;
   padding-left: 8px;
+  pointer-events: none;
 }
 
 .playing-card {
